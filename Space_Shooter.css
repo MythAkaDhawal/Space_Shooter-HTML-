@@ -1,0 +1,276 @@
+/* Enhanced final stylesheet — improved responsiveness, accessibility, performance and touch support.
+   Safe changes only: variables with fallbacks, robust focus styles, reduced-motion support,
+   clearer touch targets, and minor performance hints. */
+
+:root{
+    --bg-start: #04040a;
+    --bg-end: #071026;
+    --panel-bg: rgba(255,255,255,0.04);
+    --panel-glow: rgba(173,216,230,0.06);
+    --accent: #7fdbff;
+    --danger: #ff4136;
+    --glass-blur: 6px;
+    --ui-font: "Courier New", Courier, monospace;
+    --ui-size: 18px;
+    --touch-size: 64px;
+    --max-width: 1600px;
+    --max-height: 900px;
+}
+
+/* Base / Reset (minimal + safe) */
+* { box-sizing: border-box; }
+html, body {
+    height: 100%;
+    margin: 0;
+    font-family: var(--ui-font);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: linear-gradient(180deg, var(--bg-start) 0%, var(--bg-end) 100%);
+    color: #fff;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Container: centered, responsive and constrained */
+#game-container {
+    position: relative;
+    width: 90vw;
+    height: 90vh;
+    max-width: var(--max-width);
+    max-height: var(--max-height);
+    min-width: 320px;
+    min-height: 320px;
+    margin: 2vh auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: none;
+    -ms-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+    contain: layout paint;
+}
+
+/* Canvas: maintain CSS size; actual pixel buffer handled in JS */
+canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    border-radius: 12px;
+    background: radial-gradient(ellipse at center, rgba(255,255,255,0.02) 0%, rgba(0,0,0,0.2) 60%), #0c0c1e;
+    box-shadow:
+        0 10px 30px rgba(0,0,0,0.7),
+        0 0 60px rgba(127,219,255,0.05),
+        inset 0 1px 0 rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.03);
+    image-rendering: optimizeQuality;
+    z-index: 1;
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Starfield overlay (non-interactive) */
+#game-container::before{
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+        radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+        radial-gradient(rgba(127,219,255,0.02) 1px, transparent 1px);
+    background-size: 120px 120px, 200px 200px;
+    opacity: 0.18;
+    mix-blend-mode: screen;
+    transform: translateZ(0);
+    will-change: transform, opacity;
+    animation: starDrift 40s linear infinite;
+}
+
+/* Keep animation off for reduced-motion users */
+@media (prefers-reduced-motion: reduce) {
+    #game-container::before { animation: none !important; }
+}
+
+/* Animation */
+@keyframes starDrift {
+    from { transform: translateY(0); opacity: 0.18; }
+    50%  { transform: translateY(-30px); opacity: 0.22; }
+    to   { transform: translateY(0); opacity: 0.18; }
+}
+
+/* Heads-up display */
+#ui-container {
+    position: absolute;
+    top: 18px;
+    left: 18px;
+    right: 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    font-size: var(--ui-size);
+    pointer-events: none;
+    z-index: 3;
+}
+
+#ui-container > div {
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-radius: 10px;
+    padding: 10px 16px;
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    backdrop-filter: blur(var(--glass-blur));
+    box-shadow: 0 6px 18px var(--panel-glow);
+    border: 1px solid rgba(255,255,255,0.04);
+    display: inline-flex;
+    align-items: baseline;
+    gap: 10px;
+    min-width: 120px;
+    justify-content: center;
+    color: var(--accent);
+    font-weight: 700;
+}
+
+/* Score / Lives color emphasis */
+#ui-container #score, #ui-container #lives {
+    color: var(--accent);
+}
+
+/* Game over dialog */
+#game-over {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.98);
+    display: none; /* toggled by JS */
+    z-index: 5;
+    flex-direction: column;
+    align-items: center;
+    background: linear-gradient(180deg, rgba(10,10,14,0.88), rgba(6,6,10,0.88));
+    padding: 32px 40px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.06);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 40px rgba(255,65,54,0.08);
+    pointer-events: auto;
+    min-width: 320px;
+    text-align: center;
+    animation: popIn 260ms ease-out forwards;
+    will-change: transform, opacity;
+}
+
+/* Ensure accessible focus outline and prefer-visible focus */
+#restart-button {
+    padding: 12px 26px;
+    font-size: 18px;
+    cursor: pointer;
+    background: linear-gradient(180deg, #0090ff, #0063b3);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    transition: transform 120ms ease, box-shadow 120ms ease, background 200ms ease;
+    box-shadow: 0 8px 22px rgba(0,144,255,0.18), inset 0 -2px 0 rgba(0,0,0,0.12);
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+}
+#restart-button:hover { transform: translateY(-4px); }
+#restart-button:active { transform: translateY(-1px) scale(0.995); }
+#restart-button:focus-visible {
+    box-shadow: 0 0 0 4px rgba(0,144,255,0.14), 0 10px 30px rgba(0,0,0,0.5);
+    outline: none;
+}
+
+/* Headings inside dialog */
+#game-over h1 {
+    margin: 0 0 10px 0;
+    font-size: 44px;
+    color: var(--danger);
+    text-shadow: 0 6px 26px rgba(255,65,54,0.12);
+    letter-spacing: 0.6px;
+}
+#game-over p {
+    font-size: 18px;
+    margin: 0 0 20px;
+    color: rgba(255,255,255,0.95);
+}
+
+/* Anim for popIn (skip when reduced motion) */
+@keyframes popIn {
+    from { transform: translate(-50%, -50%) scale(0.96); opacity: 0; }
+    to   { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+    #game-over { animation: none !important; transition: none !important; }
+}
+
+/* Touch controls (mobile-first) */
+.touch-controls {
+    position: absolute;
+    bottom: 20px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 18px;
+    z-index: 4;
+    pointer-events: auto;
+    touch-action: none;
+}
+.touch-button {
+    width: var(--touch-size);
+    height: var(--touch-size);
+    min-width: 56px;
+    min-height: 56px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    font-weight: 700;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+    transition: transform 100ms ease, background 120ms ease;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+}
+.touch-button:active { transform: translateY(1px) scale(0.995); }
+
+/* Hide touch controls on larger screens */
+@media (min-width: 641px) {
+    .touch-controls { display: none; }
+}
+
+/* Small screens: scale down paddings and sizes */
+@media (max-width: 640px) {
+    :root { --ui-size: 16px; --touch-size: 60px; }
+    #game-over { padding: 20px; width: calc(100% - 40px); min-width: unset; }
+    #game-over h1 { font-size: 34px; }
+    #ui-container { font-size: 16px; top: 12px; left: 12px; right: 12px; }
+    #ui-container > div { padding: 8px 12px; min-width: 100px; }
+}
+
+/* High contrast accessibility support */
+@media (prefers-contrast: more) {
+    #ui-container > div { background: rgba(0,0,0,0.6); border-color: rgba(255,255,255,0.12); }
+    canvas { box-shadow: none; border-color: rgba(255,255,255,0.12); }
+}
+
+/* Prevent accidental selection in interactive areas */
+#game-container, canvas, #ui-container, #game-over, .touch-button {
+    -ms-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* Small helper class */
+.glow { filter: drop-shadow(0 6px 18px rgba(127,219,255,0.08)); }
+
+/* Print: hide heavy UI */
+@media print {
+    #game-container, #ui-container, #game-over, .touch-controls { display: none !important; }
+    canvas { display: none !important; }
+}
