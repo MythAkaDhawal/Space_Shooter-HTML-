@@ -1,6 +1,3 @@
-/* Enhanced final stylesheet — improved responsiveness, accessibility, performance and touch support.
-   Safe changes only: variables with fallbacks, robust focus styles, reduced-motion support,
-   clearer touch targets, and minor performance hints. */
 
 :root{
     --bg-start: #04040a;
@@ -273,4 +270,5 @@ canvas {
 @media print {
     #game-container, #ui-container, #game-over, .touch-controls { display: none !important; }
     canvas { display: none !important; }
+
 }
